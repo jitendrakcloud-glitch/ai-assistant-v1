@@ -6,11 +6,11 @@ from google import genai
 st.set_page_config(page_title="My AI Personal Assistant", page_icon="🤖")
 st.title("🤖 My AI Personal Assistant")
 
-# Load API key from Streamlit Secrets or local environment variables
+# Load API key from Streamlit Secrets or environment variables
 api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
-    st.warning("GEMINI_API_KEY not found. Please add it to Streamlit Secrets or your .env file.")
+    st.warning("GEMINI_API_KEY not found. Please add it to your Streamlit Secrets.")
     st.stop()
 
 # Initialize the Gemini client
@@ -27,19 +27,19 @@ for message in st.session_state.messages:
 
 # Handle user input
 if prompt := st.chat_input("Ask me anything..."):
-    # Add user message to history and display it
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate response from Gemini
+    # Generate response from Gemini using the correct model endpoint
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = client.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=prompt,
-            )
-            st.markdown(response.text)
-            
-    # Save assistant response to history
-    st.session_state.messages.append({"role": "assistant", "content": response.text})
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.8-flash",
+                    contents=prompt,
+                )
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"API Error: {e}")
